@@ -1,6 +1,7 @@
 import * as http from "http";
 import { WebSocket, WebSocketServer } from "ws";
 import httpProxy from "http-proxy";
+import * as crypto from "crypto";
 
 interface Tunnel {
     ws: WebSocket;
@@ -10,6 +11,16 @@ interface Tunnel {
 
 // subdomain -> tunnel
 const tunnels: Map<string, Tunnel> = new Map();
+
+const generateId = (length: number): string => {
+    const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+    let result = "";
+    const randomBytes = crypto.randomBytes(length);
+    for (let i = 0; i < length; i++) {
+        result += chars[randomBytes[i] % chars.length];
+    }
+    return result;
+};
 
 const handleRequest = async (req: http.IncomingMessage, res: http.ServerResponse) => {
     const host = req.headers.host || "";
@@ -50,9 +61,7 @@ const wss = new WebSocketServer({ server });
 wss.on("connection", async (ws, req) => {
     const url = new URL(req.url || "", `http://${req.headers.host}`);
     const port = parseInt(url.searchParams.get("port") || "8080");
-
-    const { customAlphabet } = await import("nanoid");
-    const subdomain = customAlphabet("abcdefghijklmnopqrstuvwxyz0123456789", 5)();
+    const subdomain = generateId(5);
 
     tunnels.set(subdomain, {
         ws,
