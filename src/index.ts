@@ -1,7 +1,6 @@
 import * as http from "http";
 import { WebSocket, WebSocketServer } from "ws";
 import httpProxy from "http-proxy";
-import { Handler } from "@netlify/functions";
 
 interface Tunnel {
     ws: WebSocket;
@@ -67,39 +66,6 @@ wss.on("connection", async (ws, req) => {
         tunnels.delete(subdomain);
     });
 });
-
-export const handler: Handler = async (event, context) => {
-    if (!event.body) {
-        return {
-            statusCode: 400,
-            body: "Missing request body",
-        };
-    }
-
-    const req = new http.IncomingMessage(null as any);
-    Object.assign(req, {
-        method: event.httpMethod,
-        headers: event.headers,
-        url: event.path,
-    });
-
-    const res = new http.ServerResponse(req);
-
-    await handleRequest(req, res);
-
-    const headers = Object.entries(res.getHeaders()).reduce((acc, [key, value]) => {
-        if (value !== undefined) {
-            acc[key] = Array.isArray(value) ? value[0] : value;
-        }
-        return acc;
-    }, {} as { [key: string]: string | number | boolean });
-
-    return {
-        statusCode: res.statusCode,
-        body: res.statusMessage || "",
-        headers,
-    };
-};
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
