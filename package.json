@@ -13,7 +13,7 @@
         "tunnel",
         "opensource"
     ],
-    "author": "shindeshubhamm",
+    "author": "zigartiq",
     "license": "MIT",
     "dependencies": {
         "http-proxy": "^1.18.1",
