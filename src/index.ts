@@ -5,6 +5,7 @@ import * as crypto from "crypto";
 
 interface Tunnel {
     ws: WebSocket;
+    targetHost: string;
     targetPort: number;
     lastActive: number;
 }
@@ -42,7 +43,7 @@ const handleRequest = async (req: http.IncomingMessage, res: http.ServerResponse
         req,
         res,
         {
-            target: `http://localhost:${tunnel.targetPort}`,
+            target: `http://${tunnel.targetHost}:${tunnel.targetPort}`,
             ws: req.headers.upgrade === "websocket",
         },
         (err: Error) => {
@@ -63,9 +64,12 @@ wss.on("connection", async (ws, req) => {
     const port = parseInt(url.searchParams.get("port") || "8080");
     const subdomain = generateId(5);
 
+    const clientIp = (req.headers["x-forwarded-for"] as string) || "unknown";
+
     tunnels.set(subdomain, {
         ws,
         targetPort: port,
+        targetHost: clientIp,
         lastActive: Date.now(),
     });
 
